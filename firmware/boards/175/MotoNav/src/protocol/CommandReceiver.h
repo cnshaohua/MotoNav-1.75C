@@ -1,10 +1,13 @@
 #pragma once
 // 导航状态重置、文字命令和总消息入口。由 MotoNav.ino 按依赖顺序包含，仅编译一次。
 void resetNavState() {
+  cancelPendingRaster();
   trafficLightFrame.clear();trafficLightLab.clear();
   if (idlePowerOffNavigationActive(true, inNav, cruiseOn, navDir == "A"))
     idlePowerOffReset(&idlePowerOffTimer, millis());
   inNav = false;
+  navWaiting = false;
+  navArrivedHold = false;
   tripOn = false; lightDist = -1;                       // v3.1
   mapCamN = 0;                                          // v3.5
   ghostN = 0;                                           // v4.4
@@ -122,6 +125,21 @@ void handleText(const String &m) {
   }
   if (m == "P") return;                                 // 心跳
   if (m == "C") { stopArriveFx(); progReset(); resetNavState(); drawWaiting(WAIT_READY); return; }
+  if (m == "#NA,1") {
+    stopArriveFx();progReset();resetNavState();navArrivedHold=true;inNav=true;navDir="A";
+    navDirty=true;return;
+  }
+  if (m == "#NW,1") {
+    if (!navWaiting) {
+      stopArriveFx(); ringActive = false; laneN = 0; tripOn = false;
+      hasCam = false; lightDist = -1; trafficLightFrame.clear();trafficLightLab.clear();
+      speedKmh = -1;
+      for (int i=0;i<2;i++) { imgs[i].showW=0;imgs[i].showH=0;imgs[i].recvId=-1; }
+    }
+    inNav = true; navWaiting = true;navArrivedHold=false; cruiseOn = false;
+    idlePowerOffReset(&idlePowerOffTimer, millis());navDirty = true;return;
+  }
+  if (m == "#NW,0") { navWaiting = false;navDirty = true;return; }
 
   if (m.startsWith("#v,")) { speedKmh = m.substring(3).toInt(); navDirty = true; return; }
   if (m.startsWith("#k")) {
@@ -207,6 +225,7 @@ void handleText(const String &m) {
       // App 8.3.23 adds a third field: each style now owns its map data.
       // Old Android/iOS #t,t commands keep their legacy recoloring behavior.
       if (t != themeIdx && m.indexOf(',',3)>=0) {
+        cancelPendingRaster();
         rasterValid=false; rasterBackValid=false; mapValid=false;
         for(int kind : {1,3}) {
           Bulk &b=bulks[kind];b.id=-1;b.total=0;b.got=0;b.done=false;
@@ -376,6 +395,8 @@ void handleText(const String &m) {
   if (m.startsWith("#")) return;                        // v6.7 不认识的 "#..." 指令：忽略（别当成导航方向）
   int comma = m.indexOf(',');                           // 导航：方向,距离
   if (comma > 0) {
+    navWaiting = false;
+    navArrivedHold = false;
     String prevDir = navDir;
     navDir = m.substring(0, comma);
     // v7.1 导航中 → 到达：放特效（重连补发的 "A,0"、圆屏刚开机收到的都不放）

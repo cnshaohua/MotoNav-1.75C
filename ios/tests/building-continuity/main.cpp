@@ -27,6 +27,7 @@ uint8_t *rasterBuf=nullptr,*rasterBackBuf=nullptr;
 RasterHeader rasterBackHeader={};
 int rasBW=0,rasX0=0,rasY0=0,rasW=0,rasH=0,rasterFrame=0;
 float rasMpp=2;unsigned long rasterAt=0;
+void cancelPendingRaster() {} // No queued jobs in this synchronous decoder fixture.
 // Includes the production decoder unchanged. Only hardware/miniz services are stubbed.
 #include "fixture/src/map/RasterDecoder.h"
 static inline uint16_t blendF(uint16_t a,uint16_t,uint32_t){return a;}

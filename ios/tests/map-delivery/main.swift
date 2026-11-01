@@ -127,7 +127,7 @@ check(staged.take(x:0,y:300,kmh:120,style:0,transferPending:false)==nil && stage
 var base=[Bool](repeating:false,count:100),complete=base,available=[Bool](repeating:true,count:100)
 for i in 0...3 {base[i]=true}
 let roofs=RouteMapPreparationPolicy.next(base:base,complete:complete,display:0,target:1,buildings:true,kmh:120,available:available)
-check(roofs?.index==1 && roofs?.buildings==true,"nearby future buildings prepare before 96 distant base blocks, including highway speed")
+check(roofs?.index==4 && roofs?.buildings==false,"whole-route road coverage precedes optional buildings before locking")
 base[2]=false
 let urgent=RouteMapPreparationPolicy.next(base:base,complete:complete,display:0,target:1,buildings:true,kmh:120,available:available)
 check(urgent?.index==2 && urgent?.buildings==false,"missing upcoming roads always precede building passes")
@@ -136,7 +136,7 @@ check(RouteMapPreparationPolicy.next(base:base,complete:complete,display:0,targe
 base[2]=true
 available[1]=false
 check(RouteMapPreparationPolicy.next(base:base,complete:complete,display:0,target:1,buildings:true,kmh:120,available:available)?.index != 1,"roof cooldown is local rather than stopping all downloads")
-print("PASS delayed 60/80/100/120 km/h handoffs; old blank reproduced; staged-map ATT protection; near-route building priority")
+print("PASS delayed 60/80/100/120 km/h handoffs; old blank reproduced; staged-map ATT protection; whole-route road priority")
 
 
 // A slow transfer can leave a late staged packet behind the vehicle. In build6

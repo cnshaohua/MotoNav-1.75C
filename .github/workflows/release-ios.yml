@@ -1,7 +1,7 @@
 name: iOS Build and Verify
 on:
   push:
-    branches: [main]
+    branches: [main, codex/publish-ios16-phone8-20261101]
     paths: ['ios/**', 'scripts/build-ios*.sh', 'build-ios.sh', 'firmware/boards/175/MotoNav/**', '.github/workflows/release-ios.yml']
   pull_request:
     paths: ['ios/**', 'scripts/build-ios*.sh', 'build-ios.sh', 'firmware/boards/175/MotoNav/**', '.github/workflows/release-ios.yml']
@@ -69,6 +69,8 @@ jobs:
         run: |
           set -euo pipefail
           python3 ios/tests/webmotor/check.py | tee parity-tests.log
+          python3 ios/tests/screenoff-maps/run.py | tee screenoff-tests.log
+          python3 ios/tests/reroute-recovery/run.py | tee reroute-tests.log
           swiftc ios/MotoNav/ArrivalPolicy.swift ios/tests/arrival/main.swift -o /tmp/arrival
           /tmp/arrival
           clang++ -std=c++17 ios/tests/phone-clock/receiver.cpp -o /tmp/clock-receiver
@@ -89,6 +91,11 @@ jobs:
         run: |
           set -o pipefail
           bash scripts/build-ios-ipa.sh | tee build-ios.log
+      - name: Package matching iOS source
+        run: |
+          set -euo pipefail
+          git archive --format=zip --prefix=MotoNav/ -o output/ios/MotoNav-iOS-0.16.2-build16-Source.zip HEAD ios build-ios.sh scripts/build-ios-ipa.sh .github/workflows/release-ios.yml LICENSE.md licenses
+          (cd output/ios && shasum -a 256 *.ipa *.zip > SHA256SUMS.txt)
       - name: Verify icon and identify artifact
         id: package
         run: |
@@ -119,4 +126,6 @@ jobs:
             output/ios/
             build-ios.log
             parity-tests.log
+            screenoff-tests.log
+            reroute-tests.log
           if-no-files-found: warn

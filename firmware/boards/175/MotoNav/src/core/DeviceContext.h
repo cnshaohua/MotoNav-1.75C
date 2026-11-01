@@ -104,6 +104,8 @@ portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
 // ===== 导航与行车状态 =====
 bool shownConn = false;       // 屏幕上反映的连接状态
 bool inNav = false;           // 是否处于导航中
+bool navWaiting = false;      // 已开始导航，等待真实定位/引导，不显示虚构方向和距离
+bool navArrivedHold = false;  // 上游明确确认到达后，旗子保留至用户点按
 String navDir = "";           // 当前方向
 int navDist = 0;              // 当前距离（米）
 float navAngle = NAN;         // v1.8 路口实际转弯角度；NAN = 没有，用标准角度

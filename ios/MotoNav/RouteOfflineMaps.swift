@@ -37,6 +37,7 @@ final class RouteOfflineMaps {
             ?? (buildings ? RouteMapCache.shared.read(frame: frame, source: source, buildings: false, node: node, style: style) : nil)
     }
     func update(_ index: Int, display:Int) { target = max(0, min(plan.nodes.count - 1, index));self.display=max(0,min(plan.nodes.count-1,display)) }
+    func suspendCapture() {jobToken?.cancel()}
     func start() {
         busy = true; onStatus("沿线离线地图：检查已有地图包…")
         worker.async {
@@ -49,7 +50,8 @@ final class RouteOfflineMaps {
             DispatchQueue.main.async {
                 guard !self.token.isCancelled else { return }
                 self.ready = done; self.baseReady = base; self.busy = false
-                self.timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in self?.pump() }
+                let timer=Timer(timeInterval:0.5,repeats:true){[weak self] _ in self?.pump()}
+                self.timer=timer;RunLoop.main.add(timer,forMode:.common)
                 self.onReady(self.plan.nodes[self.target]); self.pump()
             }
         }
@@ -77,7 +79,7 @@ final class RouteOfflineMaps {
         let i=next.index,includeBuildings=next.buildings
         busy = true
         let node = plan.nodes[i]
-        onStatus("沿线离线地图：\(baseCount)/\(ready.count) 块可用，下载第 \(i + 1) 块\(includeBuildings ? "（补齐建筑）" : "（普通底图优先）")")
+        onStatus("息屏底图准备：\(baseCount)/\(ready.count) 块，\(baseCount==ready.count ? "道路已备齐，补充建筑":"优先准备整条路线道路")")
         let job = MapWorkToken(); jobToken = job
         worker.async {
             let result = Result { () throws -> Data in

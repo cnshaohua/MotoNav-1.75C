@@ -24,6 +24,7 @@
 #include "src/map/MapState.h"
 #include "src/map/VectorMapReceiver.h"
 #include "src/map/RasterDecoder.h"
+#include "src/map/RasterWorkQueue.h"
 #include "src/display/RowWorker.h"
 #include "src/map/RasterRenderer.h"
 #include "src/map/RouteRenderer.h"
@@ -153,7 +154,6 @@ void setup() {
 
 // 主循环：接收消息、处理输入、调度页面、绘图和推屏。
 void loop() {
-  // New phone/connection must opt in again; old Android/iOS clients are unchanged.
   if(rasterBuildingCarryEpoch!=mediaConnectionEpoch) {
     rasterBuildingCarryOn=false;rasterBuildingCarryEpoch=mediaConnectionEpoch;
   }
@@ -222,6 +222,7 @@ void loop() {
     handleMessage(local.data, local.len);
   }
 
+  pollRasterWork(); // Bound map processing so navigation and touch keep refreshing.
   updateStats();
   if (pendingStat.length()) { pendingStat2 = pendingStat; pendingStat = ""; }
   sendPendingAck();                                    // v2.0 地图收齐的确认 / v2.2 帧率
@@ -238,7 +239,7 @@ void loop() {
   }
   if(tripValue<0)tripDrawValue=-1;
   static bool wasMap = false;
-  bool mapNow = inNav && mapModeActive();
+  bool mapNow = inNav && !navWaiting && !navArrivedHold && mapModeActive();
   if (mapNow != wasMap) { wasMap = mapNow; navDirty = true; }   // 进出地图模式时整帧重画
   if (mapNow) navDirty = true;
 

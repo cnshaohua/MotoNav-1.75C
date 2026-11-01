@@ -8,7 +8,10 @@ enum RasterPacket {
         Int(Int32(bitPattern: UInt32(b[p]) | UInt32(b[p+1]) << 8 | UInt32(b[p+2]) << 16 | UInt32(b[p+3]) << 24))
     }
     static func isBuilding(_ data: Data) -> Bool {
-        let b = [UInt8](data); return b.count >= 16 && u16(b, 14) == (2000 | flag)
+        guard data.count >= 16 else {return false}
+        return data.withUnsafeBytes { (b:UnsafeRawBufferPointer) in
+            (Int(b[14]) | (Int(b[15]) << 8)) == (2000 | flag)
+        }
     }
     static func valid(_ data: Data, frame: Int, x: Int, y: Int) -> Bool {
         let b = [UInt8](data)

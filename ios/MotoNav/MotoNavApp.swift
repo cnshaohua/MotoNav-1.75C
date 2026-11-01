@@ -57,7 +57,11 @@ struct MotoNavApp: App {
             ContentView()
                 .background(AmapCaptureSurface().frame(width: 1, height: 1))
                 .preferredColorScheme(AppearanceMode(rawValue:appearance)?.scheme)
+                .onReceive(NotificationCenter.default.publisher(for:UIApplication.willResignActiveNotification)){_ in
+                    MapFeeder.shared.setRenderingAvailable(false)
+                }
                 .onReceive(NotificationCenter.default.publisher(for:UIApplication.didBecomeActiveNotification)){_ in
+                    MapFeeder.shared.setRenderingAvailable(true)
                     BleLink.shared.syncPhoneClock(force:true)
                     MusicBridge.shared.pollMetadata(force:true)
                 }

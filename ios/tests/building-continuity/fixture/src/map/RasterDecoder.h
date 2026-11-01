@@ -198,6 +198,32 @@ void parseRasterLegacy(const uint8_t *p, uint32_t len) {
   rasterAt = millis();
 }
 
+static inline RasterHeader currentRasterHeader() {
+  RasterHeader old = {};
+  old.frame=rasterFrame; old.x0=rasX0; old.y0=rasY0; old.width=rasW; old.height=rasH;
+  old.mm=(uint16_t)lroundf(rasMpp*1000); old.blocksWide=rasBW;
+  old.palette=rasHasPal;old.buildings=rasterCarriesBuildings;
+  old.bytes=(size_t)old.blocksWide*((old.height+15)/16)*128;
+  return old;
+}
+static inline bool canKeepRaster(const RasterHeader &old,const RasterHeader &next) {
+  return rasterValid && !rasterViceValid && !rasHasPal && !next.palette &&
+      rasterFrame==next.frame && old.mm==next.mm && rasterAllocatedBytes==RASTER_BUF_BYTES;
+}
+static inline void installDecodedRaster(const uint8_t *p,const RasterHeader &next,const RasterHeader &old,bool keep) {
+  uint8_t *oldPixels=rasterBuf;
+  rasterBuf=rasterBackBuf;
+  rasterBackBuf=oldPixels;
+  if (rasterAllocatedBytes!=RASTER_BUF_BYTES) { free(rasterBackBuf); rasterBackBuf=nullptr; keep=false; }
+  rasterAllocatedBytes=RASTER_BUF_BYTES;
+  rasterBackHeader=old; rasterBackValid=keep;
+  rasterVice=nullptr; rasterViceValid=false; vicePatchData=nullptr; vicePatchCount=0;
+  rasBW=next.blocksWide; rasX0=next.x0; rasY0=next.y0; rasW=next.width; rasH=next.height;
+  rasMpp=next.mm/1000.0f; rasterFrame=next.frame; rasHasPal=next.palette;
+  if (next.palette) for (int i=0;i<16;i++) rasPal[i]=rasterU16(p+16+2*i);
+  rasterValid=true; rasterAt=millis();
+  rasterCarriesBuildings=next.buildings;
+}
 // 普通地图先在备用缓冲解码，成功后交换；上一块保留，用来补齐新块的覆盖边缘。
 bool parseRaster(const uint8_t *p, uint32_t len) {
   RasterHeader next;
@@ -211,31 +237,17 @@ bool parseRaster(const uint8_t *p, uint32_t len) {
   }
   if (!rasterBackBuf) rasterBackBuf=(uint8_t *)ps_malloc(RASTER_BUF_BYTES);
   if (!rasterBackBuf) return false;
+  RasterHeader old=currentRasterHeader();
+  const bool keep=canKeepRaster(old,next);
+  rasterBackValid=false;
   rasterDecode(p,next,rasterBackBuf);
-  RasterHeader old = {};
-  old.frame=rasterFrame; old.x0=rasX0; old.y0=rasY0; old.width=rasW; old.height=rasH;
-  old.mm=(uint16_t)lroundf(rasMpp*1000); old.blocksWide=rasBW;
-  bool keep=rasterValid && !rasterViceValid && !rasHasPal && !next.palette &&
-      rasterFrame==next.frame && old.mm==next.mm && rasterAllocatedBytes==RASTER_BUF_BYTES;
-  old.palette=rasHasPal;old.buildings=rasterCarriesBuildings;
-  old.bytes=(size_t)old.blocksWide*((old.height+15)/16)*128;
   if(keep && rasterBuildingCarryOn && themeIdx==1) rasterCarryRoofs(rasterBuf,old,rasterBackBuf,next);
-  uint8_t *oldPixels=rasterBuf;
-  rasterBuf=rasterBackBuf;
-  rasterBackBuf=oldPixels;
-  if (rasterAllocatedBytes!=RASTER_BUF_BYTES) { free(rasterBackBuf); rasterBackBuf=nullptr; keep=false; }
-  rasterAllocatedBytes=RASTER_BUF_BYTES;
-  rasterBackHeader=old; rasterBackValid=keep;
-  rasterVice=nullptr; rasterViceValid=false; vicePatchData=nullptr; vicePatchCount=0;
-  rasBW=next.blocksWide; rasX0=next.x0; rasY0=next.y0; rasW=next.width; rasH=next.height;
-  rasMpp=next.mm/1000.0f; rasterFrame=next.frame; rasHasPal=next.palette;
-  if (next.palette) for (int i=0;i<16;i++) rasPal[i]=rasterU16(p+16+2*i);
-  rasterValid=true; rasterAt=millis();
-  rasterCarriesBuildings=next.buildings;
+  installDecodedRaster(p,next,old,keep);
   return true;
 }
 
 void setRasterBuildingCarry(bool on) {
+  if(on!=rasterBuildingCarryOn)cancelPendingRaster();
   rasterBuildingCarryEpoch=mediaConnectionEpoch;
   rasterBuildingCarryOn=on;
   if(on) return;

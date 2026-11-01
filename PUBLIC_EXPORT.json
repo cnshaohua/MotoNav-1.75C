@@ -3,7 +3,7 @@
   "boards": [
     "Waveshare ESP32-S3-Touch-AMOLED-1.75"
   ],
-  "firmwareVersion": "7.12.10-pages.5",
+  "firmwareVersion": "7.12.10-phone.8",
   "credentialsIncluded": false,
   "signingFilesIncluded": false,
   "anonymousBuildVerified": true,
@@ -17,7 +17,7 @@
   "simulationImages": 3,
   "mutedVideos": 3,
   "photos": 7,
-  "iosVersion": "0.16.0",
+  "iosVersion": "0.16.2",
   "iosBundleIdentifier": "com.example.motonav",
   "iosReleaseBuildVerified": true,
   "iosSideloadlyInstallVerified": false,
@@ -27,8 +27,8 @@
     "ios",
     "android"
   ],
-  "iosFirmwareVersion": "7.12.10-pages.5",
-  "androidFirmwareVersion": "7.12.10-pages.5",
+  "iosFirmwareVersion": "7.12.10-phone.8",
+  "androidFirmwareVersion": "7.12.10-phone.8",
   "firmwareShared": true,
   "androidReleaseNotes": "docs/RELEASE-2026-11-01.md",
   "androidArrivalFixDeviceTest": "Titan 2 / firmware 7.8.12 / simulated navigation / user confirmed",
@@ -40,8 +40,8 @@
   "androidCrashRecoveryChecks": 7,
   "iosArrivalFixDeviceTestVerified": false,
   "appVersionCode": 130,
-  "firmwareReleaseNotes": "docs/RELEASE-FIRMWARE-7.12.10-pages.5.md",
-  "iosSourceChangedThisUpdate": false,
+  "firmwareReleaseNotes": "docs/RELEASE-IOS-FIRMWARE-2026-11-01.md",
+  "iosSourceChangedThisUpdate": true,
   "freshIncluded": true,
   "binaryReleaseIncludedThisUpdate": true,
   "latestAndroidDeviceTestVerified": false,
@@ -103,11 +103,14 @@
   "androidPowerOptimizationSourceCommit": "a57019d5f161625b4da6c6fdafea62dfe4bcd503",
   "androidPowerConsumptionMeasured": false,
   "countdownVersion": "8.3.26-single.32-fresh.1",
-  "iosBuild": 12,
+  "iosBuild": 16,
   "standardSourceUnchangedThisUpdate": true,
   "releaseTag": "motonav-2026.11.01",
   "countdownPackage": "com.motonav.app.fresh",
   "countdownUi": "five tabs, reduced diagnostics",
   "androidBinaryPublished": false,
-  "androidSourceOnly": true
+  "androidSourceOnly": true,
+  "publicFirmwareExactBinaryDeviceFlashed": false,
+  "iosScreenOffMapsDeviceConfirmed": true,
+  "privateBootAssetsIncluded": false
 }

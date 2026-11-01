@@ -4,27 +4,29 @@
 
 ## 下载与版本
 
-**[打开下载页](https://github.com/zyn950929/MotoNav/releases/tag/motonav-2026.11.01)**，在 Assets 中选择对应文件。
+**[打开下载页](https://github.com/zyn950929/MotoNav/releases/tag/motonav-2026.11.01-r2)**，在 Assets 中选择对应文件。
 
 | 需要什么 | 当前版本 | 下载 / 说明 |
 | --- | --- | --- |
 | 安卓普通版，不带读秒 | **8.3.26**，保持原版 | [普通版源码与打包](android/standard/README.md) |
-| 安卓读秒版 | **8.3.26-single.32-fresh.1**，五栏精简 UI | [源码 ZIP](https://github.com/zyn950929/MotoNav/releases/download/motonav-2026.11.01/MotoNav-Android-Countdown-8.3.26-single.32-fresh.1-Source.zip) · [自行打包](android/countdown/README.md) |
-| 1.75 圆屏，Windows 烧录 | **7.12.10-pages.5** | [Windows 一键烧录 ZIP](https://github.com/zyn950929/MotoNav/releases/download/motonav-2026.11.01/MotoNav-1.75-v7.12.10-pages.5-Universal-Flasher.zip) |
-| 1.75 圆屏，Mac 烧录 | **7.12.10-pages.5** | [macOS 一键烧录 ZIP](https://github.com/zyn950929/MotoNav/releases/download/motonav-2026.11.01/MotoNav-1.75-v7.12.10-pages.5-macOS-OneClick.zip) |
-| iPhone App | **0.16.0 Build12**，不带读秒 | [未签名 IPA](https://github.com/zyn950929/MotoNav/releases/download/motonav-2026.11.01/MotoNav-0.16.0-build12-unsigned.ipa) · [iOS 说明](ios/README.md) |
+| 安卓读秒版 | **8.3.26-single.32-fresh.1**，五栏精简 UI | [源码 ZIP](https://github.com/zyn950929/MotoNav/releases/download/motonav-2026.11.01-r2/MotoNav-Android-Countdown-8.3.26-single.32-fresh.1-Source.zip) · [自行打包](android/countdown/README.md) |
+| 1.75 圆屏，Windows 烧录 | **7.12.10-phone.8** | [Windows 一键烧录 ZIP](https://github.com/zyn950929/MotoNav/releases/download/motonav-2026.11.01-r2/MotoNav-1.75-v7.12.10-phone.8-Universal-Flasher.zip) |
+| 1.75 圆屏，Mac 烧录 | **7.12.10-phone.8** | [macOS 一键烧录 ZIP](https://github.com/zyn950929/MotoNav/releases/download/motonav-2026.11.01-r2/MotoNav-1.75-v7.12.10-phone.8-macOS-OneClick.zip) |
+| iPhone App | **0.16.2 Build16**，不带读秒 | [未签名 IPA](https://github.com/zyn950929/MotoNav/releases/download/motonav-2026.11.01-r2/MotoNav-0.16.2-build16-unsigned.ipa) · [iOS 说明](ios/README.md) |
 
 圆屏包**只适用微雪 ESP32-S3-Touch-AMOLED-1.75**。1.85B 仍是 7.12.3-185B，不能刷这些镜像；M5Stack 也不能混刷。
 
 ## 这次更新了什么
 
-- 读秒版以维护者指定的 **single.32-fresh.1 五栏精简版**为准：保持五栏（首页搜索、圆屏显示、导航语音、圆屏设置、地图 Key），精简调试入口与状态信息，统一卡片与选路布局。
-- 保留网页摩托车 / 驾车 / 自行车、选路与模拟、途经点 / 加油站、收藏 / 历史、导航中修改设置，以及 single.32 的后台和停车读秒修正。
-- 不再在读秒端叠加近期 PR 的传输 / 压缩 / 媒体图片实验；普通版目录保持本次整理前的内容，Git 历史保留。
-- 1.75 固件回到准确的 **pages.5** 源码和镜像，通用 MotoNav 开机，**不含个人 Rebel500 画面**。Windows 和 Mac 包使用同一镜像。
-- 补齐 iPhone Build12 IPA 下载，iOS 功能代码不在这次改版。
+- **iOS 息屏地图**：锁屏后继续读取并发送已准备的沿线底图和楼块；先准备整条路线道路，再补建筑。修正地图传到一半取消、重复发送造成的抖动。
+- **iOS 偏航恢复**：调整偏航确认、重算超时及会话隔离，旧请求不会覆盖新导航；保留四栏目 UI、途经点、收藏、历史和语音选择。
+- **圆屏换图更平稳**：解码和楼块继承分步执行，处理时继续显示旧图，完成后一起切换；不新增整张地图缓冲。保留固定页面顺序、时间日期、音乐、天气和关机保护。
+- **安卓 / iOS 共用 1.75 固件**，公开版使用通用 MotoNav / 品牌开机，不包含维护者私人图片。Windows、Apple 芯片 Mac、Intel Mac 使用相同镜像。
+- **安卓两版源码保持不变**，读秒版仍为 single.32-fresh.1 五栏精简版，只提供源码，不提供预签名 APK。
 
-[详细更新与验证范围](docs/RELEASE-2026-11-01.md)
+本轮 iPhone 息屏同路线回放中，用户确认底图、楼块正常，已无肉眼可见的停顿。公开通用版只替换开机素材并重新编译；这不是所有手机、路线、弱网或未缓存区域的保证。**偏离已准备区域后，iOS 仍可能需要回到前台补图。**
+
+[详细更新与验证范围](docs/RELEASE-IOS-FIRMWARE-2026-11-01.md)
 
 ## 安卓：怎么安装或自己打包
 
@@ -79,4 +81,4 @@ App 内使用自己的高德 iOS Key，申请时填写最终实际 Bundle ID。i
 
 **使用本套程序请遵守交通法规，使用即表示自愿承担可能带来的交通事故及其他风险。** 行驶中不要操作设备，路线、图标和读秒不能代替现场信号与标志；本提示不排除依法不能免除的责任。项目仍可能存在错误，测试回放不等于实际道路验证。
 
-当前帮助见[文档目录](docs/README.md)，旧更新说明归入[历史资料](docs/archive/README.md)。历史安装与烧录包保留在 [Releases](https://github.com/zyn950929/MotoNav/releases)，版本以本页顶部为准。
+当前帮助见[文档目录](docs/README.md)，旧更新说明归入[历史资料](docs/archive/README.md)，已被本轮说明替代的重复文档已清理。历史安装与烧录包保留在 [Releases](https://github.com/zyn950929/MotoNav/releases)，版本以本页顶部为准。

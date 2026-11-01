@@ -28,6 +28,21 @@ void animateRing() {
 // 按当前全部状态画一整帧导航画面
 void drawNavFrame() {
   onWaitScreen = false;                                 // v3.6 离开首页，猫猫不再动
+  if (navArrivedHold) {
+    viewInit=false;frameIsMap=false;gfx->fillScreen(C_BLACK);drawStatus();
+    fxFlag(CX-70,140,1.35f,0,C_WHITE);
+    printCentered("ARRIVED",CX,355,4,C_CYAN);needFlush=true;return;
+  }
+  if (navWaiting) {
+    viewInit = false;gfx->fillScreen(C_BLACK);drawStatus();
+    // Neutral target: no route, turn arrow, speed or distance until supplied by the source.
+    gfx->drawCircle(CX, 205, 30, C_CYAN);gfx->drawCircle(CX, 205, 10, C_CYAN);
+    gfx->drawLine(CX-43,205,CX-23,205,C_CYAN);gfx->drawLine(CX+23,205,CX+43,205,C_CYAN);
+    gfx->drawLine(CX,162,CX,182,C_CYAN);gfx->drawLine(CX,228,CX,248,C_CYAN);
+    printCentered("WAITING", CX, 280, 3, C_CYAN);
+    drawTextImg(0, ROAD_Y, 0xDD);drawTextImg(1, BOTTOM_Y, 0x99);
+    needFlush = true;return;
+  }
   if (mapModeActive()) { drawMapFrame(); return; }      // v2.0 小地图
   viewInit = false;
   if (cruiseOn) {                                       // v4.8 巡航但还没有地图：只显示车速和测速

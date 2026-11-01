@@ -93,7 +93,7 @@ struct IndependentPlannerView:View {
                     if !model.message.isEmpty{Text(ContentView.userMessage(model.message)).font(.footnote).foregroundColor(ContentView.sub)}
                     if let route=selectedRoute{routeOptions(route)}
                     Text(mode == .motorcycle ? "账号过期时，可在这里重新登录高德。":"自行车路线将按骑行方式规划。").font(.caption).foregroundColor(ContentView.sub)
-                    Text("锁屏前请等待沿线底图准备；后台继续定位、语音和蓝牙，尚未准备的地图需回前台下载。").font(.caption).foregroundColor(ContentView.sub)
+                    Text("锁屏前等待整条路线道路底图就绪；后台继续读取缓存、定位、语音和蓝牙，未缓存区域需回前台补充。").font(.caption).foregroundColor(ContentView.sub)
                 }.padding(16)
             }.background(ContentView.bg).navigationTitle("\(mode.rawValue)路线")
                 .toolbar{ToolbarItem(placement:.cancellationAction){Button("返回首页"){dismiss()}}}

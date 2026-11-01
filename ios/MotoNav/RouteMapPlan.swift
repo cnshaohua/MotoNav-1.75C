@@ -117,6 +117,9 @@ struct RouteMapPlan {
 final class RouteMapCache {
     private let root: URL
     private let lock = NSLock()
+    private struct Center:Hashable {let x:Int,y:Int}
+    private var known:[String:Set<Center>]=[:]
+    struct Hit {let bytes:Data,node:RouteMapPlan.Node}
     static let shared = RouteMapCache()
     init(root: URL? = nil) {
         self.root = root ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("route_maps")
@@ -127,6 +130,15 @@ final class RouteMapCache {
     }
     func read(frame: MapGeo.Frame, source: Int, buildings: Bool, node: RouteMapPlan.Node, style: Int = 1) -> Data? {
         lock.lock(); defer { lock.unlock() }
+        return readLocked(frame:frame,source:source,buildings:buildings,node:node,style:style)
+    }
+    private func catalogKey(_ frame:MapGeo.Frame,_ source:Int,_ style:Int)->String {
+        "\(frame.id):\(frame.refLat):\(frame.refLng):\(source):\(style)"
+    }
+    private func remember(_ node:RouteMapPlan.Node,frame:MapGeo.Frame,source:Int,style:Int) {
+        known[catalogKey(frame,source,style),default:[]].insert(Center(x:Int(node.x),y:Int(node.y)))
+    }
+    private func readLocked(frame: MapGeo.Frame, source: Int, buildings: Bool, node: RouteMapPlan.Node, style: Int) -> Data? {
         let url = file(frame: frame, source: source, buildings: buildings, node: node, style: style)
         guard let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
               let size = attrs[.size] as? NSNumber, (17...480000).contains(size.intValue),
@@ -134,7 +146,24 @@ final class RouteMapCache {
               RasterPacket.valid(data, frame: frame.id, x: Int(node.x - 1200), y: Int(node.y + 1200)),
               MapStyleTransfer.matches(data,style:style),
               style != 1 || RasterPacket.hasMapContent(data) else { return nil }
+        remember(node,frame:frame,source:source,style:style)
         return data
+    }
+    /// Reuse an already-read map even if a reroute chooses different cache centres.
+    /// The bounded in-memory catalog avoids walking the filesystem on GPS updates.
+    func covering(frame:MapGeo.Frame,source:Int,style:Int,x:Double,y:Double,kmh:Int)->Hit? {
+        lock.lock();defer{lock.unlock()}
+        let candidates=(known[catalogKey(frame,source,style)] ?? []).filter {
+            MapCoveragePolicy.covers(x:x,y:y,cx:Double($0.x),cy:Double($0.y),kmh:max(120,kmh),margin:50)
+        }.sorted {hypot(Double($0.x)-x,Double($0.y)-y)<hypot(Double($1.x)-x,Double($1.y)-y)}
+        for center in candidates.prefix(8) {
+            let node=RouteMapPlan.Node(x:Double(center.x),y:Double(center.y),distance:0)
+            if let bytes=readLocked(frame:frame,source:source,buildings:false,node:node,style:style)
+                ?? readLocked(frame:frame,source:source,buildings:true,node:node,style:style) {
+                return Hit(bytes:bytes,node:node)
+            }
+        }
+        return nil
     }
     func store(_ data: Data, frame: MapGeo.Frame, source: Int, node: RouteMapPlan.Node, style: Int = 1) throws {
         guard RasterPacket.valid(data, frame: frame.id, x: Int(node.x - 1200), y: Int(node.y + 1200)),
@@ -163,6 +192,7 @@ final class RouteMapCache {
         #if os(iOS)
         try FileManager.default.setAttributes([.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication], ofItemAtPath: file.path)
         #endif
+        remember(node,frame:frame,source:source,style:style)
     }
     private func totalBytesLocked() -> Int64 {
         let files = FileManager.default.enumerator(at: root, includingPropertiesForKeys: [.fileSizeKey, .isRegularFileKey])
@@ -183,6 +213,12 @@ final class RouteMapCache {
 struct MapHandoffBuffer {
     struct Packet {
         let bytes:Data, cx:Double, cy:Double, sat:Bool, type:Int, info:String, source:Int, style:Int
+        let roadBytes:Int
+        init(bytes:Data,cx:Double,cy:Double,sat:Bool,type:Int,info:String,source:Int,style:Int) {
+            self.bytes=bytes;self.cx=cx;self.cy=cy;self.sat=sat;self.type=type
+            self.info=info;self.source=source;self.style=style
+            roadBytes=MapDeliveryPolicy.compactBase(bytes).count
+        }
     }
     private(set) var pending:Packet?
     static func mayPrepare(x:Double,y:Double,cx:Double,cy:Double)->Bool {
@@ -212,8 +248,8 @@ struct MapHandoffBuffer {
 }
 
 
-/// Roads in the near window precede roofs; nearby roofs precede distant road downloads.
-/// A long route must not postpone every building until its last base packet is ready.
+/// Prepare the route's roads before optional roof captures so locking the phone
+/// does not leave distant route blocks waiting behind expensive building passes.
 enum RouteMapPreparationPolicy {
     struct Job {let index:Int, buildings:Bool}
     static func next(base:[Bool],complete:[Bool],display:Int,target:Int,buildings:Bool,kmh:Int,available:[Bool])->Job? {
@@ -222,13 +258,13 @@ enum RouteMapPreparationPolicy {
         let near=Array(d...min(base.count-1,t+2))
         if let i=near.first(where:{!base[$0] && available[$0]}) {return Job(index:i,buildings:false)}
         let roadsReady=near.allSatisfy{base[$0]}
+        let order=Array(t..<base.count)+Array(0..<t)
+        if let i=order.first(where:{!base[$0] && available[$0]}) {return Job(index:i,buildings:false)}
         if buildings && roadsReady {
             let first=kmh>5 ? t : d
             let order=[first]+near.filter{$0 != first}
             if let i=order.first(where:{!complete[$0] && available[$0]}) {return Job(index:i,buildings:true)}
         }
-        let order=Array(t..<base.count)+Array(0..<t)
-        if let i=order.first(where:{!base[$0] && available[$0]}) {return Job(index:i,buildings:false)}
         if buildings && roadsReady,let i=order.first(where:{!complete[$0] && available[$0]}) {return Job(index:i,buildings:true)}
         return nil
     }

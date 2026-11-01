@@ -793,7 +793,7 @@ struct ContentView: View {
                     }
                 }
                 Text(Self.userMessage(map.offlineStatus)).font(.caption).foregroundColor(ContentView.sub)
-                Text("选定路线后，前台自动下载沿途地图；锁屏使用已保存地图包。请等下载完成再出发。")
+                Text("前台优先准备整条路线的道路底图，随后补充建筑。道路全部就绪后可锁屏；未缓存区域需回前台补充。")
                     .font(.caption2).foregroundColor(ContentView.sub)
                 Text("走过的路线").foregroundColor(AppTheme.text)
                 Picker("走过的路线", selection: $settings.trail) {

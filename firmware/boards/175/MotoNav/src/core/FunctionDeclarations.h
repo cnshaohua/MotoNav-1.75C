@@ -124,6 +124,7 @@ void parseViceGeometry(const uint8_t *p, uint32_t len, uint32_t pos, int bw, int
 void prepareVicePalette(const uint16_t *pal);
 void parseRasterLegacy(const uint8_t *p, uint32_t len);
 bool parseRaster(const uint8_t *p, uint32_t len);
+void cancelPendingRaster();
 void helperLoop(void *);
 void helperInit();
 void parallelRows(void (*fn)(int, int, int), int y0, int y1);
