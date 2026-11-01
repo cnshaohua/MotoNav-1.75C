@@ -1,6 +1,6 @@
 from pathlib import Path
 
-root=Path(__file__).resolve().parents[3]
+root=Path(__file__).resolve().parents[2]
 fixture=Path(__file__).parent/'fixture'
 production=root/'boards/175/MotoNav'
 for name in ['RasterContinuity.h','RasterBuildingCarry.h','RasterWork.h','src/map/RasterWorkQueue.h','src/protocol/BulkReceiver.h']:

@@ -42,6 +42,10 @@ jobs:
           python3 firmware/package_flasher.py --help
   mac-package:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.mac_package == 'true'
+    # GitHub hides draft release assets from tokens without repository write access.
+    # The commands below only download and test the package; they never publish it.
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
