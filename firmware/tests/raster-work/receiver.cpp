@@ -37,10 +37,10 @@ static std::vector<uint8_t> packet(int x=0){
  std::vector<uint8_t>p(16);put(p,0,73,2);put(p,2,x,4);put(p,6,0,4);put(p,10,1200,2);put(p,12,1200,2);put(p,14,2000,2);
  for(int remain=1440000;remain;){int n=std::min(remain,271);if(n<=15)p.push_back((n-1)<<4);else{p.push_back(240);p.push_back(n-16);}remain-=n;}return p;
 }
-static std::vector<uint8_t> send(const std::vector<uint8_t>&p,int id,int type=3){
- std::vector<uint8_t>last;int parts=(p.size()+299)/300;
+static std::vector<uint8_t> send(const std::vector<uint8_t>&p,int id,int type=3,int payload=485){
+ std::vector<uint8_t>last;int parts=(p.size()+payload-1)/payload;
  for(int seq=0;seq<parts;seq++){
-  int off=seq*300,len=std::min<int>(300,p.size()-off);std::vector<uint8_t>d(15+len);
+  int off=seq*payload,len=std::min<int>(payload,p.size()-off);std::vector<uint8_t>d(15+len);
   d[0]='M';d[1]=type;d[2]=id;put(d,3,parts,2);put(d,5,seq,2);put(d,7,p.size(),4);put(d,11,off,4);memcpy(d.data()+15,p.data()+off,len);
   handleBulk(d.data(),d.size());last=d;
  }return last;
@@ -68,5 +68,17 @@ int main(){
  send(p,7);cancelPendingRaster();pollRasterWork();check(!pendingRasterWork.active&&bulks[3].got==0&&installed==1,"navigation reset discards incomplete job");
  p.pop_back();send(p,8);check(!pendingRasterWork.active&&!bulks[3].done&&bulks[3].got==0&&installed==1,"invalid map is retryable and never acknowledged");
  send(packet(),9,2);check(routeCalls==1&&pendingAck=="K,2,9","route packets retain original immediate ACK behavior");
+ // Both current phone senders use this 15-byte header, capped at 500 bytes
+ // per message. Exercise full payload and reduced-MTU fallback sizes.
+ int id=10;
+ for(int payload : {5,185,300,485}) {
+  pendingAck.clear();int previous=installed;auto tail=send(packet(),id,3,payload);
+  check(pendingRasterWork.active&&pendingAck.empty(),"phone MTU variant waits for actual decode completion");
+  send(packet(),id,2,payload);pendingAck.clear();
+  for(int limit=0;pendingRasterWork.active&&limit<1000;limit++)pollRasterWork();
+  check(installed==previous+1&&pendingAck=="K,3,"+String(id),"phone MTU variant commits and acknowledges after interleaved route");
+  pendingAck.clear();handleBulk(tail.data(),tail.size());check(pendingAck=="K,3,"+String(id),"phone MTU variant recovers a lost receipt");
+  id++;
+ }
  printf("PASS %d receiver checks: bounded work, atomic commit, delayed receipt, probes, packet replacement, session/style/preference cancellation and invalid-map retries\n",checks);
 }
