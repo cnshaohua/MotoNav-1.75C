@@ -1,7 +1,7 @@
 name: Verify universal firmware
 on:
   push:
-    branches: [main, codex/publish-ios16-phone8-20261101]
+    branches: [main]
     paths:
       - firmware/**
       - .github/workflows/release-firmware.yml

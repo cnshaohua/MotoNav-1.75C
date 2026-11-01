@@ -1,7 +1,7 @@
 name: iOS Build and Verify
 on:
   push:
-    branches: [main, codex/publish-ios16-phone8-20261101]
+    branches: [main]
     paths: ['ios/**', 'scripts/build-ios*.sh', 'build-ios.sh', 'firmware/boards/175/MotoNav/**', '.github/workflows/release-ios.yml']
   pull_request:
     paths: ['ios/**', 'scripts/build-ios*.sh', 'build-ios.sh', 'firmware/boards/175/MotoNav/**', '.github/workflows/release-ios.yml']
@@ -94,7 +94,7 @@ jobs:
       - name: Package matching iOS source
         run: |
           set -euo pipefail
-          git archive --format=zip --prefix=MotoNav/ -o output/ios/MotoNav-iOS-0.16.2-build16-Source.zip HEAD ios build-ios.sh scripts/build-ios-ipa.sh .github/workflows/release-ios.yml LICENSE.md licenses
+          git archive --format=zip --prefix=MotoNav/ -o output/ios/MotoNav-iOS-0.16.2-build16-Source.zip HEAD ios firmware/boards/175 build-ios.sh scripts/build-ios-ipa.sh .github/workflows/release-ios.yml LICENSE.md licenses
           (cd output/ios && shasum -a 256 *.ipa *.zip > SHA256SUMS.txt)
       - name: Verify icon and identify artifact
         id: package

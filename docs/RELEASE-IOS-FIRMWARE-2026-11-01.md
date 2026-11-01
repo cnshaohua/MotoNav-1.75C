@@ -1,6 +1,6 @@
 # iOS Build16 与 1.75 固件 7.12.10-phone.8
 
-2026-11-01 更新。安卓普通版 8.3.26、读秒版 single.32-fresh.1 及其打包身份逻辑保持不变。
+2026-11-01 修复，2026-11-02 发布。安卓普通版 8.3.26、读秒版 single.32-fresh.1 及其打包身份逻辑保持不变。
 
 ## 主要变化
 
@@ -31,3 +31,13 @@ iOS 修复息屏时已缓存底图及楼块的衔接，统一建筑包发送预�
 在[下载页](https://github.com/zyn950929/MotoNav/releases/tag/motonav-2026.11.01-r2)按系统选包。先升级圆屏，再沿用原签名与 Bundle ID 覆盖安装 iOS；同板型现有 MotoNav 默认应用升级保留配对和设置，首次完整安装会清除设置。
 
 源文件和新说明替代旧 Build12 / pages.5 的当前说明，旧版本仍可通过 Git 历史和历史 Release 回退。第三方许可、安卓源码和有效工具保留。
+
+## 发布检查记录
+
+- [iOS Release 构建与生产回归](https://github.com/zyn950929/MotoNav/actions/runs/41322678790)：通过。
+- [共享固件回归](https://github.com/zyn950929/MotoNav/actions/runs/41324070111)：通过，包含 5/185/300/485 字节载荷、路线交错和收图确认恢复。
+- [Apple 芯片与 Intel 的完整 Mac ZIP 检查](https://github.com/zyn950929/MotoNav/actions/runs/41324105283)：两组通过；没有执行真实设备写入。
+- Windows 原生工具、有效镜像、损坏镜像拒绝、越界路径拒绝及恢复后校验：通过。
+- [机器可读记录](VERIFY-IOS-FIRMWARE-2026-11-01.json)。
+
+已删除被本轮替代的 Build12 / pages.5 当前说明，修复失效的打包脚本引用；历史 Release、许可与安卓源码保留。
