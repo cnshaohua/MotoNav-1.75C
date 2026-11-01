@@ -3,7 +3,9 @@ from zipfile import ZipFile,ZipInfo,ZIP_DEFLATED,ZIP_STORED
 import re,struct,json,hashlib
 from resource_table import merge,parse,values,U32
 from native_preview import manual_preview
+from personal_identity import load_package, patch_native_path
 root=Path(__file__).resolve().parent
+application_id=load_package(root)
 carPath=root/'inputs/provider.apk'
 motoPath=root/'app/build/outputs/apk/debug/app-debug.apk'
 out=root/'fusion-unsigned.pending.apk'
@@ -51,10 +53,7 @@ with ZipFile(carPath) as car,ZipFile(motoPath) as moto,ZipFile(root/'car-code.ap
             b=car.read(name)
             if name=='lib/arm64-v8a/libautonavi.so':b=manual_preview(b)
             if name=='lib/arm64-v8a/libhsl.so':
-                original=b'/data/data/com.autonavi.amapauto'
-                replacement=b'/data/data/com.motonav.app.fresh'
-                assert len(original)==len(replacement) and b.count(original)==1
-                b=b.replace(original,replacement)
+                b=patch_native_path(b,application_id)
             if name.startswith('res/') and name.endswith('.xml'):b=car_names(b)
             add(name,b,info)
         for info in moto.infolist():
@@ -82,7 +81,7 @@ out.replace(root/'fusion-unsigned.apk')
 out=root/'fusion-unsigned.apk'
 summary={'bytes':out.stat().st_size,'definedClasses':len(defined),'dexFiles':len(dexes),'duplicateClasses':0,
  'resourceMerge':resourceInfo,'verifiedFileResourceReferences':checked,'motoNativeIsolation':native,
- 'installedPackage':'com.motonav.app.fresh','motoProcess':':motonav','packageCount':1,
+ 'installedPackage':application_id,'motoProcess':':motonav','packageCount':1,
  'testedOnDevice':False,'noRouteCruiseCountdownVerified':False,
  'routePreviewManualStartOnly':{'library':'libautonavi.so','offset':'0xd612c0','bytesChanged':4,'originalHashChecked':True}}
 (root/'merge-checks.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2),'utf8')

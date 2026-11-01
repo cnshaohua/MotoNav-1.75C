@@ -780,7 +780,7 @@ class MainActivity : AppCompatActivity() {
         val lightState=note("")
         card.addView(lightState)
         refreshers += { lightState.text=TrafficLightOverlay.summary() }
-        if(packageName=="com.motonav.app.fresh")card.addView(pillButton("查看车机路口信息",PURPLE){
+        if(packageName==BuildConfig.APPLICATION_ID)card.addView(pillButton("查看车机路口信息",PURPLE){
             NavigationUi.openProvider(this)
         },lpMatch(top=4,bottom=8))
         card.addView(settingRow("路口灯显示", "同一快照的左转、直行、右转一起显示，缺项标暂无数据", label("整路口",12f,SUB)))

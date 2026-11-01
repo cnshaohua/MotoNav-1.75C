@@ -40,7 +40,7 @@ object WebMotorGuide {
     private fun syncCarRoute(chosen:WebMotorRoute) {
         appContext?.let{c->runCatching{
             CarNavSync.requestWeb(c,chosen,simulation)
-            if(c.packageName=="com.motonav.app.fresh"){
+            if(c.packageName==BuildConfig.APPLICATION_ID){
                 val anchors=CarNavSync.webAnchors(chosen.key).ifEmpty{
                     RouteAnchorSelector.select(chosen.points.toTypedArray(),intArrayOf()).map{chosen.points[it]}
                 }

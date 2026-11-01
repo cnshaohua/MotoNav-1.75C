@@ -40,7 +40,7 @@ public final class CarEngineTap {
     private static Intent event(Application app,String kind){return new Intent(ACTION).setPackage(app.getPackageName())
         .putExtra("at",SystemClock.elapsedRealtime()).putExtra("kind",kind)
         .putExtra("providerProcess",Application.getProcessName());}
-    private static void emit(Application app,Intent i){app.sendBroadcast(i,"com.motonav.app.fresh.permission.CAR_GUIDANCE");}
+    private static void emit(Application app,Intent i){app.sendBroadcast(i,BuildConfig.APPLICATION_ID + ".permission.CAR_GUIDANCE");}
     private static Object call(Object o,String name) throws Exception {
         String key=o.getClass().getName()+"#"+name;
         Method m=methods.get(key);
@@ -78,7 +78,7 @@ public final class CarEngineTap {
                     {"cameraType","getCameraType"},{"cameraSpeed","getCameraSpeed"},{"speedLimit","getLimitedSpeed"}};
                 for(String[] f:fields)try{i.putExtra(f[0],(int)number(g,f[1]));}catch(Exception ignored){}
             }
-            app.sendBroadcast(i,"com.motonav.app.fresh.permission.CAR_GUIDANCE");
+            app.sendBroadcast(i,BuildConfig.APPLICATION_ID + ".permission.CAR_GUIDANCE");
         } catch(Throwable e) {
             long t=SystemClock.elapsedRealtime();
             if(t-errorAt>10000){errorAt=t;Log.w("MotoNavCarTap","guide adapter: "+e.getClass().getSimpleName());}

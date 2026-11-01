@@ -60,8 +60,8 @@ object CarNavSync {
         if(registered)return
         context=c.applicationContext
         val r=object:BroadcastReceiver(){override fun onReceive(c:Context,i:Intent){receive(i)}}
-        if(Build.VERSION.SDK_INT>=33)context!!.registerReceiver(r,IntentFilter(CarEngineTap.ACTION),"com.motonav.app.fresh.permission.CAR_GUIDANCE",handler,Context.RECEIVER_NOT_EXPORTED)
-        else context!!.registerReceiver(r,IntentFilter(CarEngineTap.ACTION),"com.motonav.app.fresh.permission.CAR_GUIDANCE",handler)
+        if(Build.VERSION.SDK_INT>=33)context!!.registerReceiver(r,IntentFilter(CarEngineTap.ACTION),BuildConfig.APPLICATION_ID + ".permission.CAR_GUIDANCE",handler,Context.RECEIVER_NOT_EXPORTED)
+        else context!!.registerReceiver(r,IntentFilter(CarEngineTap.ACTION),BuildConfig.APPLICATION_ID + ".permission.CAR_GUIDANCE",handler)
         registered=true
     }
     private fun send(i:Intent) {
@@ -79,7 +79,7 @@ object CarNavSync {
         Log.i("MotoNavCarSync","provider mute requested: navigation=1 cruise=1")
     }
     /** Uses the current selected SDK path, not a stale destination preference. */
-    fun wants(c:Context)=TrafficLightOverlay.enabled && c.packageName=="com.motonav.app.fresh" &&
+    fun wants(c:Context)=TrafficLightOverlay.enabled && c.packageName==BuildConfig.APPLICATION_ID &&
         NaviBridge.directRouteMode!=LocalRouting.BICYCLE && ShareGuide.route?.isTravel!=true
     fun request(c:Context,n:AMapNavi,emulate:Boolean):Boolean {
         stop()
@@ -101,7 +101,7 @@ object CarNavSync {
     fun requestWeb(c:Context,route:WebMotorRoute,emulate:Boolean) {
         stop();start(c)
         routeSource="web-motorcycle"
-        if(!TrafficLightOverlay.enabled || c.packageName!="com.motonav.app.fresh"){status="后台路线同步已关闭";return}
+        if(!TrafficLightOverlay.enabled || c.packageName!=BuildConfig.APPLICATION_ID){status="后台路线同步已关闭";return}
         if(emulate){status="网页模拟未同步真实位置灯源";return}
         webRouteKey=route.key
         val track=route.tracker()

@@ -1,4 +1,5 @@
 from pathlib import Path
+from personal_identity import load_package, relocate_manifest
 import os
 import shutil,re,json,copy,subprocess,xml.etree.ElementTree as E
 root=Path(__file__).resolve().parent
@@ -98,11 +99,6 @@ for e in car.iter():
     for k in list(e.attrib):
         if k.startswith('{http://schemas.android.com/tools}'):del e.attrib[k]
 # Relocate only host identities, not the provider implementation class names.
-car.set('package','com.motonav.app.fresh')
-for node in car.iter():
-    for attr,val in list(node.attrib.items()):
-        if attr in [A+'authorities',A+'permission',A+'readPermission',A+'writePermission',A+'taskAffinity'] or (node.tag in ['permission','uses-permission'] and attr==A+'name'):
-            val=val.replace('com.autonavi.amapauto','com.motonav.app.fresh').replace('com.yuminaga.motonav.permission.CAR_GUIDANCE','com.motonav.app.fresh.permission.CAR_GUIDANCE')
-            node.set(attr,val)
+relocate_manifest(car,load_package(root))
 E.ElementTree(car).write(root/'AndroidManifest.xml',encoding='utf-8',xml_declaration=True)
 print('Merged manifest prepared; target SDK',sdk.get(A+'targetSdkVersion'))

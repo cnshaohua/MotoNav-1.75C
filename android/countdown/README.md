@@ -22,11 +22,21 @@
 从 https://github.com/zyn950929/MotoNav 的 main 分支获取最新源码，打包读秒版 8.3.26-single.32-fresh.1，工程在 android/countdown。
 准备 Python 3、JDK 17、Android SDK 35/build-tools 35.0.0、Gradle 8.10.2、apktool 2.12.1、Zig 0.13.0；下载慢时使用可信国内镜像。
 使用根目录 Build-Countdown.ps1 或“一键打包-读秒版.bat”完成完整构建，让脚本自动获取并校验 provider.apk。不要只交付 Gradle 中间 APK。
-最终包名保持 com.motonav.app.fresh。已有签名就沿用，没有就生成并保存我的本机签名；不要上传签名或 Key。
+首次打包自动生成并保存个人包名和本机签名，后续沿用 personal.properties 和 .local/debug.keystore。已有工程保留原包名和签名，不要上传身份文件、签名或 Key。
 请检查完整安装包、告诉我 APK 路径、包名和签名证书的十六进制 SHA1，并保存 Application-info.txt。
 ```
 
-用最终包名和证书 SHA1 申请本人高德 Android Key，填入 App。天地图 Key 不再需要。覆盖升级必须沿用原包名和签名；私下备份 `.local/debug.keystore`。
+用最终包名和证书 SHA1 申请本人高德 Android Key，填入 App。天地图 Key 不再需要。覆盖升级必须沿用原包名和签名；私下同时备份 `personal.properties` 与 `.local/debug.keystore`。
+
+## 个人包名与更新
+
+- 首次在全新目录完整打包，自动生成 `com.mn.u` 加 13 位随机十六进制字符的个人包名，并保存到本目录的 `personal.properties`。不同人的新工程独立生成；同一工程重复打包、清理构建缓存后打包，包名和签名保持不变。
+- 旧版固定包名工程：保留原 `.local/debug.keystore`，脚本优先读取原 `output/Application-info.txt` 或 `build-result.json`；没有输出记录但仍有旧签名时沿用旧固定包名。不会自动把旧安装改成新包名。
+- 更新源码或换电脑时恢复 `personal.properties` 和 `.local/debug.keystore`；不要把某人的这两份文件塞进公共 ZIP。已建立身份后丢失签名会报错，要求恢复备份。
+- 需要指定包名时，只在首次新工程构建加 `--application-id com.example.rider`，或根目录 PowerShell 入口加 `-ApplicationId com.example.rider`。保存后再次传入不同包名会被拒绝。兼容组件的原生路径长度限制为 **21 个 ASCII 字符**，超长会明确报错，不截断或退回公共包名；普通版不受此限制。
+- 最终合包、广播权限、读秒同步和原生数据路径均跟随个人包名。源码中的 `com.yuminaga.motonav` 是类命名空间，无需改动，不能用它代替成品包名申请 Key。
+
+直接用 Gradle 编译中间包前，先在本目录运行 `python personal_identity.py` 初始化本机身份；它仍不能代替完整构建入口。版本号不因这次打包工具修订而改变。
 
 ## 开发者：完整构建
 
@@ -48,6 +58,6 @@ python build-countdown.py --apktool 'D:\Tools\apktool.jar' --gradle 'D:\Tools\gr
 
 按提示允许定位、附近设备 / 蓝牙及必要通知，完成额外数据组件首次初始化，再连接圆屏。若没有读秒，先检查初始化、定位、网络、后台权限和当地覆盖。普通模拟导航不保证产生真实读秒。
 
-源码回归：JDK 17 下运行 `python tests/run.py`；下载校验：`python tests/test_provider_download.py`。本次完成完整构建与策略回归；未重新做完整实路、耗电、温度测试。
+源码回归：JDK 17 下运行 `python tests/run.py`；下载校验：`python tests/test_provider_download.py`；个人包名、旧身份迁移、原生路径和权限检查：`python tests/test_personal_identity.py`。构建验证不等于完整实路、耗电、温度测试。
 
 [本次更新与验证范围](../../docs/RELEASE-2026-11-01.md) · [许可](../../LICENSE.md) · [第三方说明](../../licenses)

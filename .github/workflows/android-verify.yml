@@ -49,6 +49,10 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
+      - name: Personal package, native path and migration regressions
+        run: python android/countdown/tests/test_personal_identity.py
+      - name: Initialize local countdown identity
+        run: python android/countdown/personal_identity.py
       - name: Compile countdown autonomous source (intermediate APK only)
         working-directory: android/countdown
         run: gradle --no-daemon assembleDebug

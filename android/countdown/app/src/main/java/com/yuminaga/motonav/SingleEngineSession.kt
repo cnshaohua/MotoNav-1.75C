@@ -151,8 +151,8 @@ object SingleEngineSession {
         File(c.filesDir,"single-engine-route.json").delete()
         val r=object:BroadcastReceiver(){override fun onReceive(c:Context,i:Intent){receive(i)}}
         if(Build.VERSION.SDK_INT>=33)context!!.registerReceiver(r,IntentFilter(CarEngineTap.ACTION),
-            "com.motonav.app.fresh.permission.CAR_GUIDANCE",handler,Context.RECEIVER_NOT_EXPORTED)
-        else context!!.registerReceiver(r,IntentFilter(CarEngineTap.ACTION),"com.motonav.app.fresh.permission.CAR_GUIDANCE",handler)
+            BuildConfig.APPLICATION_ID + ".permission.CAR_GUIDANCE",handler,Context.RECEIVER_NOT_EXPORTED)
+        else context!!.registerReceiver(r,IntentFilter(CarEngineTap.ACTION),BuildConfig.APPLICATION_ID + ".permission.CAR_GUIDANCE",handler)
         receiver=r
         MapFeeder.clearSingleEngineRoute();MapFeeder.onNaviStart()
         BleLink.send("C");BleLink.send("#z,0");BleLink.send("#j");BleLink.send("#k");BleLink.send("#c");BleLink.send("#g")

@@ -9,6 +9,9 @@ import shutil
 import subprocess
 import sys
 from provider_download import resolve_provider
+from zipfile import ZipFile
+import re
+from personal_identity import resolve_identity, native_hash, relocate_smali, read_properties, save_properties, certificate_sha1
 
 ROOT=Path(__file__).resolve().parent
 VERSION='8.3.26-single.32-fresh.1'
@@ -39,12 +42,16 @@ def main():
     parser.add_argument('--sdk',required=True,type=Path)
     parser.add_argument('--java-home',required=True,type=Path)
     parser.add_argument('--zig',required=True,type=Path,help='Zig 0.13.0 executable')
+    parser.add_argument('--application-id',help='Optional first-build package (maximum 21 characters); saved for later builds.')
     parser.add_argument('--offline',action='store_true')
     args=parser.parse_args()
     if os.name!='nt':parser.error('The complete countdown builder currently supports Windows only.')
     spec=json.loads((ROOT/'provider-integration-deltas.json').read_text('utf8'))
     try:
+        package=resolve_identity(requested=args.application_id)
         args.provider=resolve_provider(args.provider,offline=args.offline)
+        with ZipFile(args.provider) as provider_zip:
+            hsl_hash=native_hash(provider_zip.read("lib/arm64-v8a/libhsl.so"),package)
     except (ValueError,OSError) as error:
         parser.error(str(error))
     os.environ['JAVA_HOME']=str(args.java_home.resolve())
@@ -69,18 +76,15 @@ def main():
         (smali/'carolds').mkdir(exist_ok=True)
         (smali/'android/support').rename(smali/'carolds/support')
     patch_dependency()
-    # Match the supplied Fresh edition's package without renaming engine classes.
+    # Relocate installed identities, preserving original engine/JNI class names.
     for path in smali.rglob('*.smali'):
-        text=path.read_text('utf8')
-        text=text.replace('"com.autonavi.amapauto"','"com.motonav.app.fresh"')
-        text=text.replace('"com.autonavi.amapauto.provider.','"com.motonav.app.fresh.provider.')
-        text=text.replace('"content://com.autonavi.amapauto.provider.','"content://com.motonav.app.fresh.provider.')
-        path.write_text(text,encoding='utf8',newline='\n')
+        path.write_text(relocate_smali(path.read_text('utf8'),package),encoding='utf8',newline='\n')
     run(['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass','-File',ROOT/'native-route/build.ps1',
          '-ZigPath',args.zig.resolve(),'-JavaHome',args.java_home.resolve()])
     # Local SDK paths and generated identities are ignored by Git.
     (ROOT/'local.properties').write_text('sdk.dir='+str(args.sdk.resolve()).replace('\\','/').replace(':','\\:')+'\n','utf8')
     flags=['--no-daemon','--max-workers=2','-Dorg.gradle.jvmargs=-Xmx1536m -Dfile.encoding=UTF-8','-Pkotlin.compiler.execution.strategy=in-process']
+    flags.extend(['-PpersonalApplicationId='+package,'-PproviderHslSha256='+hsl_hash])
     if args.offline:flags.append('--offline')
     run([args.gradle.resolve(),*flags,'assembleDebug'])
     moto=ROOT/'app/build/outputs/apk/debug/app-debug.apk'
@@ -95,12 +99,19 @@ def main():
     result=subprocess.check_output([str(bt/'apksigner.bat'),'verify','--print-certs',str(final)],cwd=ROOT).decode('utf8','replace')
     print(result)
     run([bt/'zipalign.exe','-c','4',final])
-    (out/'Application-info.txt').write_text('Package: com.motonav.app.fresh\n'+result,'utf8')
-    (out/'build-result.json').write_text(json.dumps({'version':VERSION,'package':'com.motonav.app.fresh',
+    badging=subprocess.check_output([str(bt/'aapt2.exe'),'dump','badging',str(final)],cwd=ROOT).decode('utf8','replace')
+    if not re.search(r"^package: name='"+re.escape(package)+r"'",badging,re.M):
+        raise ValueError('Final APK package differs from the saved personal identity.')
+    identity=read_properties(ROOT/'personal.properties')
+    cert=certificate_sha1(result,identity.get('signingCertificateSHA1'))
+    identity.update(signingEstablished='true',signingCertificateSHA1=cert)
+    save_properties(ROOT/'personal.properties',identity)
+    (out/'Application-info.txt').write_text('Package: '+package+'\nSHA1: '+cert.upper()+'\n'+result,'utf8')
+    (out/'build-result.json').write_text(json.dumps({'version':VERSION,'package':package,'providerHslSHA256':hsl_hash,
         'apk':final.name,'sha256':sha(final.read_bytes()),'providerInputSHA256':spec['providerSHA256'],
         'privateKeysIncludedInSource':False,'deviceInstalled':False},indent=2)+'\n','utf8')
-    print('Package: com.motonav.app.fresh; apply for your own AMap Android Key using the certificate SHA1 above.')
-    print('Keep .local/debug.keystore private and reuse it for future updates. Do not share inputs/ or generated dependency code.')
+    print('Package: '+package+'; apply for your own AMap Android Key using the certificate SHA1 above.')
+    print('Keep personal.properties and .local/debug.keystore private and reuse both for future updates. Do not share inputs/ or generated dependency code.')
     print(final)
 
 if __name__=='__main__':main()

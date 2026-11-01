@@ -25,7 +25,7 @@ object ProviderConnection {
     private val retry=Runnable{context?.let{update(it,wanted)}}
 
     fun update(c:Context,needed:Boolean){
-        wanted=needed && c.packageName=="com.motonav.app.fresh"
+        wanted=needed && c.packageName==BuildConfig.APPLICATION_ID
         context=c.applicationContext
         if(!wanted){release();return}
         if(connection!=null)return

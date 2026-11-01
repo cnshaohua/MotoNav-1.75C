@@ -38,15 +38,15 @@
 从 https://github.com/zyn950929/MotoNav 的 main 分支获取最新源码。
 我要打包读秒版 8.3.26-single.32-fresh.1，工程是 android/countdown。
 请准备构建环境，下载慢时使用可信国内镜像；使用 Build-Countdown.ps1 完成完整构建，自动获取并校验 provider.apk。
-已有签名就沿用，没有就生成并保存我的本机签名。不要修改功能或上传我的签名、Key。
+首次打包自动生成并保存个人包名和本机签名，以后沿用 personal.properties 和 .local/debug.keystore。已有工程保留原身份，不能随意换包名或签名。不要上传这些文件或 Key。
 请告诉我完整 APK 路径、最终包名和签名证书的十六进制 SHA1，并保存 Application-info.txt。
 ```
 
 要普通版时改说“打包普通版 8.3.26，使用 android/standard 和 Build-Personal.ps1”，不要使用读秒构建入口。
 
-**高德 Key**：用实际 APK 的**包名 + 签名证书 SHA1**申请自己的高德 Android Key，在 App 的 Key 页面填写。不再需要天地图 Key。读秒完整包包名固定 `com.motonav.app.fresh`；签名由打包者决定。编译后实际身份信息由工具保存到本机 `Application-info.txt`，不要照抄他人的 SHA1。
+**高德 Key**：用实际 APK 的**包名 + 签名证书 SHA1**申请自己的高德 Android Key，在 App 的 Key 页面填写。不再需要天地图 Key。读秒版首次在新工程中打包会生成个人包名（形如 `com.mn.u` 加随机字符）和本机签名，后续沿用；不再统一固定为 `com.motonav.app.fresh`。旧工程会保留已有身份。实际身份信息保存到本机 `Application-info.txt`，不要照抄他人的包名或 SHA1。
 
-**覆盖升级**必须沿用原包名和签名。自行打包请私下备份签名；新生成的签名与旧版不同就不能直接覆盖，升级时沿用自己的签名。不要把证书 SHA1 当成 APK 文件 SHA256。
+**覆盖升级**必须沿用原包名和签名。读秒版请同时私下备份 `android/countdown/personal.properties` 和 `android/countdown/.local/debug.keystore`，更新源码或换电脑时恢复这两项。签名丢失会停止构建并提示恢复，不会悄悄生成替代签名。不要把证书 SHA1 当成 APK 文件 SHA256。
 
 首次使用按提示授予定位、附近设备 / 蓝牙、通知权限，完成额外数据组件的首次初始化，再连接圆屏。读秒没有数据时先检查初始化、定位、网络与后台权限。
 
