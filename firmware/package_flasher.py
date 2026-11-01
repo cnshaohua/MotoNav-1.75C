@@ -14,7 +14,7 @@ def clean_output(folder,parent):
     folder.mkdir(parents=True)
 def checksums(folder):
     p=folder/'SHA256SUMS.txt'
-    p.write_text(''.join(digest(f)+'  '+f.relative_to(folder).as_posix()+'\n' for f in sorted(folder.rglob('*')) if f.is_file() and f!=p),'utf-8')
+    p.write_text(''.join(digest(f)+'  '+f.relative_to(folder).as_posix()+'\n' for f in sorted(folder.rglob('*')) if f.is_file() and f!=p),'utf-8',newline='\n')
 def archive(folder,output,unix=False):
     with zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED,compresslevel=6) as z:
         for p in sorted(folder.rglob('*')):
