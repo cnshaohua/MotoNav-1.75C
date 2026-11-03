@@ -15,7 +15,7 @@
 | 1.75 圆屏，Mac 烧录 | **7.12.10-phone.8** | [macOS 一键烧录 ZIP](https://github.com/zyn950929/MotoNav/releases/download/motonav-2026.11.01-r2/MotoNav-1.75-v7.12.10-phone.8-macOS-OneClick.zip) |
 | iPhone App | **0.16.2 Build16**，不带读秒 | [未签名 IPA](https://github.com/zyn950929/MotoNav/releases/download/motonav-2026.11.01-r2/MotoNav-0.16.2-build16-unsigned.ipa) · [iOS 说明](ios/README.md) |
 
-圆屏包**只适用微雪 ESP32-S3-Touch-AMOLED-1.75**。1.85B 仍是 7.12.3-185B，不能刷这些镜像；M5Stack 也不能混刷。
+圆屏包**只适用微雪 ESP32-S3-Touch-AMOLED-1.75C**。1.85B 仍是 7.12.3-185B，不能刷这些镜像；M5Stack 也不能混刷。
 
 ## 这次更新了什么
 
