@@ -1,7 +1,7 @@
 # MotoNav
 
 手机配合 ESP32-S3 圆屏使用的导航工具。安卓分普通版和读秒版，按需选择；iPhone 使用独立 iOS App。
-适配微雪ESP32-S3 Touch-AMOLED-1.75C,增加BOOT按键按下变暗，再暗变亮
+适配微雪ESP32-S3 Touch-AMOLED-1.75C,增加BOOT按键按一下变暗，再按一下变亮的功能
 
 ## 下载与版本
 
